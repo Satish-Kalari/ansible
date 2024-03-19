@@ -1,0 +1,10 @@
+MONGODB_HOST: mongodb.projoy.store
+REDIS_HOST: redis.projoy.store
+CATALOGUE_HOST: catalogue.projoy.store
+MYSQL_HOST: mysql.projoy.store
+USER_HOST: user.projoy.store
+CART_HOST: cart.projoy.store
+SHIPPING_HOST: shipping.projoy.store
+PAYMENT_HOST: payment.projoy.store
+RABBITMQ_HOST: rabbitmq.projoy.store
+DISPATCH_HOST: dispatch.projoy.store

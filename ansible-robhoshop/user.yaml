@@ -1,0 +1,80 @@
+- name: Settingup User Server
+  hosts: user
+  become: yes
+  tasks:
+
+    - name: Disableing Old Nodejs % Enabeling Nodejs18
+      ansible.builtin.shell: dnf module disable nodejs -y ; dnf module enable nodejs:18 -y
+
+    - name: Instaling Nodejs
+      ansible.builtin.package:
+        name: nodejs
+        state: present 
+
+    - name: Adding User roboshop
+      ansible.builtin.user:
+        name: roboshop
+    
+    - name: Recursively remove app directory
+      ansible.builtin.file:
+        path: /app
+        state: absent
+        
+    - name: Creating Directory called App
+      ansible.builtin.file:
+        path: /app
+        state: directory
+
+    - name: Download User Application
+      ansible.builtin.get_url:
+        url: https://roboshop-builds.s3.amazonaws.com/user.zip
+        dest: /tmp
+
+    - name: Extracting User Application
+      ansible.builtin.unarchive: 
+        src: /tmp/user.zip
+        dest: /app
+        remote_src: yes #if file is alredy in remote source
+
+    - name: Installing nmp Dependecies
+      ansible.builtin.command: npm install
+      args: #args can be used to change directory
+        chdir: /app
+
+    - name: Copying User Service
+      ansible.builtin.copy:
+        src: user.service
+        dest: /etc/systemd/system/user.service
+
+    - name: Damon Reload
+      ansible.builtin.systemd_service: 
+        daemon_reload: true
+
+    - name: Copying MongoDB
+      ansible.builtin.copy:
+        src: mongodb.repo
+        dest: /etc/yum.repos.d/mongodb.repo 
+   
+    - name: Installing MongoDB Client
+      ansible.builtin.package:
+        name: mongodb-org-shell
+        state: present 
+
+    - name: get the users count
+      ansible.builtin.command: mongo --host mongodb.projoy.store --quiet --eval 'db = db.getSiblingDB("users"); db.users.count()'
+      register: user_count
+
+  # - name: print the count
+  #   ansible.builtin.debug:
+  #     msg: "product count: {{user_count}}"
+
+    - name: load user data
+      ansible.builtin.command: mongo --host mongodb.projoy.store < /app/schema/user.js
+      when: user_count.stdout == "0" # keep double quotes
+      
+    - name: start and enable user
+      ansible.builtin.service:
+        name: user
+        state: restarted
+        enabled: yes
+    

@@ -1,0 +1,8 @@
+- name: ping playbook
+  hosts: web
+  tasks:
+  - name: ping the server
+    ansible.builtin.ping:
+    
+  
+    #ansible-playbook -i inventory -e ansible_user=centos -e ansible_password=DevOps321 01-playbook.yaml
